@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 import time
+import selenium.common.exceptions
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime
+import traceback
 
 __author__ = "Michael Yuan"
 __copyright__ = "Copyright 2017"
@@ -19,16 +21,15 @@ def check(page_source):
     print "[" + str(datetime.now().time()) + "]"
     if soup.find('div', id="hotel_results") is not None:
         result = soup.find_all('div', class_="no-availability")
-        if len(result) == 5:
-            print "Shit!"
-        else:
-            print "Awesome! Lodge available! Get up and book it!!!"
+        if result is None:
+            return found
+        print "<" + str(len(result)) + "> Lodges Retrieved:"
         block_list = soup.find_all('div', class_="container container-dark result isExpander")
         if block_list is not None:
             for block in block_list:
                 lodge_name = "<" + block.find('h4', class_="flt-left").string + ">"
                 if block.find('div', class_="no-availability") is not None:
-                    print lodge_name + " sold out."
+                    print "Sold out: " + lodge_name
                 else:
                     print lodge_name + " IS AVAILABLE NOW!!!"
                     notify(lodge_name + " IS AVAILABLE NOW!!!")
@@ -57,11 +58,14 @@ while True:
     browser = webdriver.PhantomJS(executable_path=driver_path)
     #browser = webdriver.Chrome(executable_path=driver_path2)
     browser.set_page_load_timeout(60)
+
     try:
         browser.get(search_link)
-        status = status or check(browser.page_source)
-    except:
+        status = check(browser.page_source) or status
+    except selenium.common.exceptions.TimeoutException:
         print "Time out loading web page."
+    except:
+        print "Something goes wrong: " + traceback.format_exc()
     finally:
         browser.quit()
     print "---------------------------------------------------"
@@ -71,5 +75,6 @@ while True:
         else:
             notify("No available rooms during this hour.")
         count = 0
+        status = False
     time.sleep(60)
 
