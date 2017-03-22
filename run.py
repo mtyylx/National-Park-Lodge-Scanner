@@ -20,5 +20,5 @@ Example:
 r = raw_input(">>> Enter Here: ")
 if r is not "":
     r = r.split(",")
-    scanner.config_scanner(r[0], r[1], r[2], r[3], r[4])
+    scanner.config(r[0], r[1], r[2], r[3], r[4])
 scanner.run()
